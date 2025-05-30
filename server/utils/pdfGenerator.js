@@ -1,0 +1,190 @@
+const PDFDocument = require('pdfkit');
+const path = require('path');
+const fs = require('fs');
+
+const generateReportPDF = async (report) => {
+  try {
+    // Use absolute path for PDF directory
+    const pdfDir = path.resolve(__dirname, '..', '..', 'uploads', 'reports');
+    console.log('PDF directory path:', pdfDir);
+
+    // Create PDF directory if it doesn't exist with proper permissions
+    if (!fs.existsSync(pdfDir)) {
+      console.log('Creating PDF directory:', pdfDir);
+      fs.mkdirSync(pdfDir, { recursive: true, mode: 0o755 });
+    }
+
+    // Create PDF file path with consistent naming
+    const pdfFileName = `report-${report._id}.pdf`;
+    const pdfPath = path.join(pdfDir, pdfFileName);
+    console.log('Full PDF path:', pdfPath);
+    
+    // Create a new PDF document
+    const doc = new PDFDocument({
+      size: 'A4',
+      margins: {
+        top: 50,
+        bottom: 50,
+        left: 50,
+        right: 50
+      }
+    });
+
+    // Create write stream with error handling
+    const stream = fs.createWriteStream(pdfPath, { mode: 0o644 });
+    
+    // Handle stream errors
+    stream.on('error', (err) => {
+      console.error('Error writing PDF file:', err);
+      throw err;
+    });
+
+    doc.pipe(stream);
+
+    // Add header
+    doc.fontSize(24)
+       .font('Helvetica-Bold')
+       .fillColor('#1976D2')
+       .text('Speech Emotion Analysis Report', { align: 'center' });
+    doc.moveDown(2);
+
+    // Add date
+    doc.fontSize(12)
+       .font('Helvetica')
+       .fillColor('#666666')
+       .text(`Generated on: ${new Date(report.createdAt).toLocaleString()}`, { align: 'right' });
+    doc.moveDown(2);
+
+    // Add patient information section
+    doc.fontSize(16)
+       .font('Helvetica-Bold')
+       .fillColor('#000000')
+       .text('Patient Information', { underline: true });
+    doc.moveDown(1);
+
+    doc.fontSize(12)
+       .font('Helvetica')
+       .text(`Name: ${report.patient?.name || 'N/A'}`)
+       .text(`Age: ${report.patient?.age || 'N/A'}`)
+       .text(`Gender: ${report.patient?.gender || 'N/A'}`)
+       .text(`Date: ${new Date(report.createdAt).toLocaleDateString()}`);
+    doc.moveDown(2);
+
+    // Add analysis results section
+    doc.fontSize(16)
+       .font('Helvetica-Bold')
+       .text('Analysis Results', { underline: true });
+    doc.moveDown(1);
+
+    // Add emotions
+    doc.fontSize(12)
+       .font('Helvetica-Bold')
+       .text('Detected Emotions:');
+    doc.font('Helvetica')
+       .text(report.emotions.join(', '));
+    doc.moveDown(1);
+
+    // Add transcript
+    doc.font('Helvetica-Bold')
+       .text('Transcript:');
+    doc.font('Helvetica')
+       .text(report.transcript);
+    doc.moveDown(1);
+
+    // Add metrics
+    doc.font('Helvetica-Bold')
+       .text('Analysis Metrics:');
+    doc.font('Helvetica')
+       .text(`Pitch: ${report.pitch} Hz`)
+       .text(`Pace: ${report.pace} words per minute`)
+       .text(`Silence Duration: ${report.silence} seconds`);
+    doc.moveDown(1);
+
+    // Add summary with enhanced analysis
+    doc.font('Helvetica-Bold')
+       .text('Analysis Summary:');
+    doc.font('Helvetica');
+    
+    // Generate a comprehensive summary
+    const emotions = report.emotions;
+    const pace = report.pace;
+    const pitch = report.pitch;
+    const silence = report.silence;
+    
+    // Analyze speech characteristics
+    const paceAnalysis = pace < 120 ? "speaking at a slower pace" : 
+                        pace > 180 ? "speaking at a faster pace" : 
+                        "maintaining a moderate speaking pace";
+    
+    const pitchAnalysis = pitch < 100 ? "using a lower pitch" :
+                         pitch > 200 ? "using a higher pitch" :
+                         "using a moderate pitch";
+    
+    const silenceAnalysis = silence > 2 ? "with noticeable pauses" :
+                           silence < 0.5 ? "with minimal pauses" :
+                           "with natural pauses";
+    
+    // Create emotional context
+    const emotionalContext = emotions.length > 0 ? 
+        `The speech analysis indicates ${emotions.join(', ')} emotions. ` : 
+        'The emotional content of the speech was neutral. ';
+    
+    // Generate comprehensive summary
+    const summary = `${emotionalContext}The patient is ${paceAnalysis}, ${pitchAnalysis}, ${silenceAnalysis}. ` +
+                   `This combination suggests ${emotions.includes('happy') || emotions.includes('excited') ? 'a positive and engaged' : 
+                    emotions.includes('sad') || emotions.includes('angry') ? 'a more intense emotional' : 
+                    'a balanced'} communication style. ` +
+                   `The speech pattern indicates ${pace < 120 ? 'careful consideration' : 
+                    pace > 180 ? 'enthusiasm or urgency' : 
+                    'a natural flow'} in communication.`;
+    
+    doc.text(summary);
+    doc.moveDown(2);
+
+    // Add footer
+    doc.fontSize(10)
+       .font('Helvetica')
+       .fillColor('#666666')
+       .text('Generated by TheraVox - Speech Emotion Recognition System', { align: 'center' });
+
+    // Finalize PDF
+    doc.end();
+
+    // Return a promise that resolves when the PDF is written
+    return new Promise((resolve, reject) => {
+      stream.on('finish', async () => {
+        try {
+          // Add a small delay to ensure file system sync
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          
+          // Verify the file was created and is readable
+          await fs.promises.access(pdfPath, fs.constants.R_OK);
+          const stats = await fs.promises.stat(pdfPath);
+          console.log('PDF generated successfully:', {
+            path: pdfPath,
+            size: stats.size,
+            created: stats.birthtime,
+            modified: stats.mtime
+          });
+          
+          // Return the absolute path for database storage
+          console.log('Storing PDF path:', pdfPath);
+          resolve(pdfPath);
+        } catch (err) {
+          console.error('Error verifying PDF file:', err);
+          reject(err);
+        }
+      });
+      
+      stream.on('error', (err) => {
+        console.error('Error generating PDF:', err);
+        reject(err);
+      });
+    });
+  } catch (error) {
+    console.error('Error in generateReportPDF:', error);
+    throw error;
+  }
+};
+
+module.exports = { generateReportPDF }; 
