@@ -2,6 +2,7 @@ services:
   - type: web
     name: speech-emotion-recognition
     env: node
+    plan: free
     buildCommand: |
       cd client && npm install && npm run build
       cd ../server && npm install
