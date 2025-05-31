@@ -5,7 +5,6 @@ services:
     buildCommand: |
       cd client && 
       npm install && 
-      npm install tailwindcss@latest postcss@latest autoprefixer@latest --save-dev && 
       npm run build && 
       cd ../server && 
       npm install

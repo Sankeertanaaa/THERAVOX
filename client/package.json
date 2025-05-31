@@ -18,6 +18,7 @@
     "@mui/x-date-pickers": "^6.19.4",
     "@shadcn/ui": "^0.0.4",
     "@vitejs/plugin-react": "^4.3.4",
+    "autoprefixer": "^10.4.21",
     "axios": "^1.9.0",
     "date-fns": "^2.30.0",
     "express-session": "^1.18.1",
@@ -25,6 +26,7 @@
     "jspdf": "^3.0.1",
     "passport": "^0.7.0",
     "passport-google-oauth20": "^2.0.0",
+    "postcss": "^8.5.3",
     "react": "^18.2.0",
     "react-audio-player": "^0.17.0",
     "react-dom": "^18.2.0",
@@ -32,18 +34,16 @@
     "react-router-dom": "^7.5.2",
     "react-transition-group": "^4.4.5",
     "recharts": "^2.15.3",
+    "tailwindcss": "^3.4.1",
     "vite": "^4.2.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.22.0",
     "@types/react": "^18.0.10",
     "@types/react-dom": "^18.0.4",
-    "autoprefixer": "^10.4.21",
     "eslint": "^8.57.1",
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.19",
-    "globals": "^16.0.0",
-    "postcss": "^8.5.3",
-    "tailwindcss": "^3.4.1"
+    "globals": "^16.0.0"
   }
 }
