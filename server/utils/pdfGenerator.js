@@ -5,7 +5,7 @@ const fs = require('fs');
 const generateReportPDF = async (report) => {
   try {
     // Use absolute path for PDF directory
-    const pdfDir = path.resolve(__dirname, '..', '..', 'uploads', 'reports');
+    const pdfDir = path.resolve(__dirname, '..', 'uploads', 'reports');
     console.log('PDF directory path:', pdfDir);
 
     // Create PDF directory if it doesn't exist with proper permissions

@@ -1,7 +1,8 @@
 import axios from "axios";
 
+// Create axios instance with default config
 export const API = axios.create({
-  baseURL: "http://localhost:5000/api",
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000/api',
   headers: {
     'Content-Type': 'application/json'
   }
@@ -26,8 +27,11 @@ API.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      localStorage.removeItem('token');
-      window.location.href = '/login';
+      // Only redirect to login if it's not a PDF download request
+      if (!error.config.url.includes('/pdf')) {
+        localStorage.removeItem('token');
+        window.location.href = '/login';
+      }
     }
     return Promise.reject(error);
   }
@@ -181,3 +185,57 @@ export const getPatients = async () => {
     throw error;
   }
 };
+
+// Reports API
+export const getPatientReports = async () => {
+  try {
+    const response = await API.get('/reports/user');
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const getDoctorReports = async () => {
+  try {
+    const response = await API.get('/reports/doctor');
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const getReport = async (reportId) => {
+  try {
+    const response = await API.get(`/reports/${reportId}`);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const downloadReportPDF = async (reportId) => {
+  try {
+    const response = await API.get(`/reports/${reportId}/pdf`, {
+      responseType: 'blob',
+      headers: {
+        'Accept': 'application/pdf'
+      }
+    });
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const updateReportNotes = async (reportId, notes) => {
+  try {
+    const response = await API.put(`/reports/${reportId}/notes`, { notes });
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+// Also export as default for backward compatibility
+export default API;

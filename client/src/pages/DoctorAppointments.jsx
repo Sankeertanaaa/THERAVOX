@@ -67,7 +67,7 @@ function DoctorAppointments() {
     switch (status) {
       case 'upcoming':
         return 'primary';
-      case 'done':
+      case 'visited':
         return 'success';
       case 'not_visited':
         return 'error';
@@ -147,7 +147,7 @@ function DoctorAppointments() {
                         }}
                         disabled={statusUpdateLoading}
                       >
-                        Mark as Done
+                        Visited
                       </Button>
                       <Button
                         variant="contained"
@@ -174,13 +174,13 @@ function DoctorAppointments() {
         <DialogTitle>Update Appointment Status</DialogTitle>
         <DialogContent>
           <Typography>
-            Are you sure you want to mark this appointment as {selectedAppointment?.status === 'upcoming' ? 'done' : 'not visited'}?
+            Are you sure you want to mark this appointment as {selectedAppointment?.status === 'upcoming' ? 'visited' : 'not visited'}?
           </Typography>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setDialogOpen(false)}>Cancel</Button>
           <Button
-            onClick={() => handleStatusUpdate(selectedAppointment?.status === 'upcoming' ? 'done' : 'not_visited')}
+            onClick={() => handleStatusUpdate(selectedAppointment?.status === 'upcoming' ? 'visited' : 'not_visited')}
             variant="contained"
             color="primary"
             disabled={statusUpdateLoading}

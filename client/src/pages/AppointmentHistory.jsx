@@ -75,7 +75,7 @@ function AppointmentHistory() {
     switch (status) {
       case 'upcoming':
         return 'primary';
-      case 'done':
+      case 'visited':
         return 'success';
       case 'not_visited':
         return 'error';

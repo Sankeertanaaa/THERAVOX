@@ -7,6 +7,7 @@ const auth = require('../middleware/auth');
 const Report = require('../models/Report');
 const { spawn } = require('child_process');
 const { generateReportPDF } = require('../utils/pdfGenerator');
+const User = require('../models/User');
 
 // Configure multer for audio file upload
 const storage = multer.diskStorage({
@@ -61,11 +62,26 @@ router.post('/audio', auth, upload.single('audio'), async (req, res) => {
       fs.mkdirSync(pdfDir, { recursive: true, mode: 0o755 });
     }
 
+    // Fetch patient details
+    const patient = await User.findById(req.body.patientId);
+    const patientName = patient ? patient.name : 'N/A';
+    const patientAge = patient ? patient.age : 'N/A';
+    const patientGender = patient ? patient.gender : 'N/A';
+
     // Process audio using Python script
-    const pythonProcess = spawn('python', [
-      path.join(__dirname, '../../ml/process_audio.py'),
-      req.file.path
-    ]);
+    console.log('Spawning Python process...');
+    const pythonScriptPath = path.join(__dirname, '../../ml/process_audio.py');
+    const audioFilePath = req.file.path;
+    
+    const pythonArgs = [
+      pythonScriptPath,
+      audioFilePath,
+      patientName,
+      patientAge,
+      patientGender
+    ];
+
+    const pythonProcess = spawn('python', pythonArgs);
 
     let analysisData = '';
     let errorData = '';
@@ -93,9 +109,9 @@ router.post('/audio', auth, upload.single('audio'), async (req, res) => {
         const analysis = JSON.parse(analysisData);
         console.log('Analysis data received from Python script:', analysis);
         
-        // Extract just the emotion names without percentages
-        const emotionsToSave = Array.isArray(analysis.emotions) 
-          ? analysis.emotions.map(emotion => emotion.split(' (')[0].toLowerCase())
+        // Extract just the emotion names without percentages from audioEmotions
+        const emotionsToSave = Array.isArray(analysis.audioEmotions) 
+          ? analysis.audioEmotions.map(emotion => emotion.split(' (')[0].toLowerCase())
           : [];
 
         console.log('Emotions to save:', emotionsToSave);
@@ -114,7 +130,7 @@ router.post('/audio', auth, upload.single('audio'), async (req, res) => {
         });
 
         // Save the report to get the _id
-        console.log('Saving report:', report);
+        console.log('Saving report with patient ID:', req.body.patientId);
         await report.save();
         console.log('Report saved successfully with ID:', report._id);
 
@@ -144,7 +160,26 @@ router.post('/audio', auth, upload.single('audio'), async (req, res) => {
             // Don't throw error here, just log it
           }
 
-          res.json(report);
+          // Populate the patient field before generating and sending the response
+          const populatedReport = await Report.findById(report._id)
+            .populate('patient', 'name age gender')
+            .populate('doctor', 'name');
+
+          // Now generate PDF with the populated report
+          console.log('Generating PDF with populated report for ID:', populatedReport._id);
+          // Note: generateReportPDF expects the full report object, not just path
+          const finalPdfPath = await generateReportPDF(populatedReport);
+          console.log('PDF regenerated with populated data at:', finalPdfPath);
+          
+          // Update report with final PDF path (should be the same, but good practice)
+          if (populatedReport.pdfPath !== finalPdfPath) {
+              populatedReport.pdfPath = finalPdfPath;
+              await populatedReport.save();
+              console.log('Report PDF path updated after regeneration.');
+          }
+
+          console.log('Sending populated report:', populatedReport);
+          res.json(populatedReport);
         } catch (pdfError) {
           console.error('Error generating PDF:', pdfError);
           // Still return the report even if PDF generation fails

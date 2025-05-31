@@ -3,6 +3,9 @@ import os
 import json
 import traceback
 
+# Add the ml directory to the Python path
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 def check_dependencies():
     missing_packages = []
     try:
@@ -36,7 +39,8 @@ def check_dependencies():
             Wav2Vec2ForSequenceClassification,
             AutoFeatureExtractor,
             AutoConfig,
-            AutoModelForAudioClassification
+            AutoModelForAudioClassification,
+            pipeline
         )
     except ImportError:
         missing_packages.append("transformers")
@@ -63,13 +67,20 @@ from transformers import (
     Wav2Vec2ForSequenceClassification,
     AutoFeatureExtractor,
     AutoConfig,
-    AutoModelForAudioClassification
+    AutoModelForAudioClassification,
+    pipeline
 )
 from model.utils.pdf_generator import generate_pdf
 
 # ============ CONFIG =============
 SAVE_PDF_DIR = "server/uploads/reports"
 device = "cuda" if torch.cuda.is_available() else "cpu"
+
+# Load text emotion classification pipeline
+# print("Loading text emotion model...", file=sys.stderr)
+# text_emotion_classifier = pipeline("sentiment-analysis", model="j-hartmann/emotion-english-distilroberta-base", device=0 if device=="cuda" else -1)
+# print("Text emotion model loaded successfully", file=sys.stderr)
+
 # ==================================
 
 # Custom JSON encoder to handle NumPy types
@@ -98,7 +109,8 @@ ALLOWED_EMOTIONS = {
     'neutral': 'neutral',
     'happy': 'happy',
     'surprised': 'surprised',
-    'sad': 'sad'
+    'sad': 'sad',
+    'angry': 'angry'
 }
 
 # Get label to ID and ID to label mappings from the model
@@ -107,6 +119,26 @@ id2label = emotion_model.config.id2label
 
 # Set model to evaluation mode
 emotion_model.eval()
+
+# def analyze_text_emotions(text):
+#     """Analyze emotions from text transcript using a pre-trained model."""
+#     try:
+#         if not text or text == "Transcription failed":
+#             return []
+#         # The dair-ai/emotion model outputs a list of dictionaries with label and score
+#         results = text_emotion_classifier(text)
+#         // console.log('[DashboardPatient] Raw text emotion analysis results:', results);
+#         // Filter and format results (e.g., only report top emotions or those above a threshold)
+#         formatted_emotions = []
+#         # Example: Get the top 3 emotions with score > 0.5
+#         for result in results[0]: # The pipeline returns a list containing one dictionary per input text
+#             if result['score'] > 0.5:
+#                  formatted_emotions.append(f"{result['label']} ({result['score']:.1%})")
+#         return formatted_emotions
+#     except Exception as e:
+#         print(f"Error analyzing text emotions: {str(e)}", file=sys.stderr)
+#         traceback.print_exc(file=sys.stderr)
+#         return []
 
 def convert_to_wav(audio_path):
     """Convert audio to WAV format if needed."""
@@ -238,26 +270,39 @@ def detect_emotions(audio_path):
         probabilities = torch.softmax(scaled_logits, dim=-1)[0]
         
         # Get all emotions with their probabilities
-        emotion_probs = [(i, p.item() * 100) for i, p in enumerate(probabilities)]
-        emotion_probs.sort(key=lambda x: x[1], reverse=True)
+        emotion_probs = [(id2label.get(i, f'Label_{i}').lower(), p.item() * 100) for i, p in enumerate(probabilities)]
         
-        print(f"Model output - id2label mapping: {id2label}", file=sys.stderr)
-        print("All emotions detected:", file=sys.stderr)
-        for idx, prob in emotion_probs:
-            emotion_name = id2label.get(idx, f'Label_{idx}')
-            if emotion_name.lower() in ALLOWED_EMOTIONS:
-                print(f"{emotion_name}: {prob:.2f}%", file=sys.stderr)
+        print("All detected emotions with probabilities:", file=sys.stderr)
+        for emotion, prob in emotion_probs:
+            print(f"{emotion}: {prob:.2f}%", file=sys.stderr)
+
+        # Filter and collect allowed emotions above a threshold
+        reported_emotions = []
+        threshold = 15.0 # Only report emotions with probability above this threshold
         
-        # Filter and return top 2 emotions from allowed emotions
-        top_emotions = []
-        for idx, prob in emotion_probs:
-            emotion_name = id2label.get(idx, f'Label_{idx}').lower()
-            if emotion_name in ALLOWED_EMOTIONS:
-                top_emotions.append(f"{ALLOWED_EMOTIONS[emotion_name]} ({prob:.1f}%)")
-                if len(top_emotions) >= 2:  # Only take top 2 emotions
-                    break
+        for emotion, prob in sorted(emotion_probs, key=lambda item: item[1], reverse=True):
+            if emotion in ALLOWED_EMOTIONS and prob >= threshold:
+                 reported_emotions.append(f"{ALLOWED_EMOTIONS[emotion]} ({prob:.1f}%)")
+            # Optional: include the top emotion even if below threshold if no others meet it
+            # if not reported_emotions and emotion in ALLOWED_EMOTIONS:
+            #     reported_emotions.append(f"{ALLOWED_EMOTIONS[emotion]} ({prob:.1f}%)")
+            #     break
+
+        # If no emotions are above the threshold, report the top one regardless
+        if not reported_emotions and emotion_probs:
+            top_emotion, top_prob = sorted(emotion_probs, key=lambda item: item[1], reverse=True)[0]
+            if top_emotion in ALLOWED_EMOTIONS:
+                 reported_emotions.append(f"{ALLOWED_EMOTIONS[top_emotion]} ({top_prob:.1f}%)")
+            else: # If even the top emotion isn't in ALLOWED_EMOTIONS, default to neutral
+                 reported_emotions.append("neutral (100%)")
+
+        # If no emotions were detected at all (very unlikely but for safety)
+        if not reported_emotions:
+             reported_emotions.append("neutral (100%)")
+
+        print(f"Reported emotions: {reported_emotions}", file=sys.stderr)
         
-        return top_emotions if top_emotions else ["neutral (100%)"]
+        return reported_emotions
         
     except Exception as e:
         print(f"Error in emotion detection: {str(e)}", file=sys.stderr)
@@ -303,7 +348,7 @@ def summarize(text):
         return text
     return text[:120] + "..."
 
-def main(audio_path):
+def main(audio_path, patient_name="N/A", patient_age="N/A", patient_gender="N/A"):
     try:
         # Initialize models
         print("Loading models...", file=sys.stderr)
@@ -332,23 +377,26 @@ def main(audio_path):
         transcript = transcribe(audio_path)
         print(f"Transcription: {transcript}", file=sys.stderr)
         
-        # Get emotions
-        emotions = detect_emotions(audio_path)
-        print(f"Detected emotions: {emotions}", file=sys.stderr)
-        
+        # Get audio emotions
+        audio_emotions = detect_emotions(audio_path)
+        print(f"Detected audio emotions: {audio_emotions}", file=sys.stderr)
+
         # Calculate audio features
         y, sr = librosa.load(audio_path)
         pitch = librosa.piptrack(y=y, sr=sr)[1].mean()
-        pace = len(transcript.split()) / (len(y) / sr)  # words per second
-        silence = librosa.effects.split(y, top_db=20)[0].shape[0] / len(y)
+        pace = len(transcript.split()) / (len(y) / sr) if (len(y)/sr) > 0 else 0.0  # words per second, handle division by zero
+        silence = librosa.effects.split(y, top_db=20)[0].shape[0] / len(y) if len(y) > 0 else 0.0 # silence duration ratio, handle division by zero
         
         # Generate summary
         summary = summarize(transcript)
         
-        # Prepare the result
+        # Prepare the result including patient info and both emotion types
         result = {
+            "patientName": patient_name,
+            "patientAge": patient_age,
+            "patientGender": patient_gender,
             "transcript": transcript,
-            "emotions": emotions,
+            "audioEmotions": audio_emotions,
             "pitch": float(pitch),
             "pace": float(pace),
             "silence": float(silence),
@@ -365,13 +413,17 @@ def main(audio_path):
         sys.exit(1)
 
 if __name__ == "__main__":
-    if len(sys.argv) != 2:
-        print("Usage: python process_audio.py <audio_file_path>", file=sys.stderr)
+    if len(sys.argv) < 2 or len(sys.argv) > 5:
+        print("Usage: python process_audio.py <audio_file_path> [<patient_name>] [<patient_age>] [<patient_gender>] ", file=sys.stderr)
         sys.exit(1)
     
     audio_path = sys.argv[1]
+    patient_name = sys.argv[2] if len(sys.argv) > 2 else "N/A"
+    patient_age = sys.argv[3] if len(sys.argv) > 3 else "N/A"
+    patient_gender = sys.argv[4] if len(sys.argv) > 4 else "N/A"
+
     if not os.path.exists(audio_path):
         print(f"Error: Audio file not found: {audio_path}", file=sys.stderr)
         sys.exit(1)
     
-    main(audio_path)
+    main(audio_path, patient_name, patient_age, patient_gender)

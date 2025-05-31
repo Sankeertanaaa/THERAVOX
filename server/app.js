@@ -20,8 +20,16 @@ require("dotenv").config();
 
 const app = express();
 
+// Configure CORS
+app.use(cors({
+  origin: process.env.CLIENT_URL || 'http://localhost:5173',
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
+  exposedHeaders: ['Content-Disposition']
+}));
+
 // Middleware
-app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -87,11 +95,12 @@ passport.deserializeUser((obj, done) => {
   done(null, obj);
 });
 
-// Routes
+// Mount routes
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/appointments', appointmentRoutes);
 app.use('/api/upload', uploadRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 // Middleware to log requests to /api/reports
 app.use('/api/reports', (req, res, next) => {
@@ -101,13 +110,20 @@ app.use('/api/reports', (req, res, next) => {
   next();
 });
 
-// Mount reports routes before static file serving
+// Mount reports route
 app.use('/api/reports', reportRoutes);
 
-// Serve static files after API routes
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+// Serve static files with proper headers
+app.use('/uploads/reports', express.static(path.join(__dirname, 'uploads', 'reports'), {
+  setHeaders: (res, path) => {
+    res.set('Content-Type', 'application/pdf');
+    res.set('Content-Disposition', 'attachment');
+    res.set('Access-Control-Allow-Origin', process.env.CLIENT_URL || 'http://localhost:5173');
+    res.set('Access-Control-Allow-Credentials', 'true');
+  }
+}));
+app.use('/uploads/audio', express.static(path.join(__dirname, 'uploads', 'audio')));
 
-app.use('/api/notifications', notificationRoutes);
 app.use('/api/analytics', analyticsRoutes);
 
 // Serve static files in production

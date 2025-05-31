@@ -210,7 +210,7 @@ router.patch('/:id/status', auth, async (req, res) => {
     }
 
     // Validate status
-    if (!['done', 'not_visited'].includes(status)) {
+    if (!['visited', 'not_visited'].includes(status)) {
       return res.status(400).json({ error: 'Invalid status' });
     }
 
@@ -222,7 +222,7 @@ router.patch('/:id/status', auth, async (req, res) => {
       recipient: appointment.patient,
       sender: req.user.id,
       type: 'appointment',
-      message: `Your appointment has been marked as ${status === 'done' ? 'completed' : 'not visited'}`,
+      message: `Your appointment has been marked as ${status === 'visited' ? 'completed' : 'not visited'}`,
       appointment: appointment._id
     });
 

@@ -94,7 +94,7 @@ const ViewAppointments = () => {
     switch (status) {
       case 'upcoming':
         return 'primary';
-      case 'done':
+      case 'visited':
         return 'success';
       case 'not_visited':
         return 'error';
@@ -166,16 +166,16 @@ const ViewAppointments = () => {
                       <Chip label={appointment.status} color={getStatusColor(appointment.status)} size="small" />
                     </TableCell>
                     <TableCell>
-                      {user.role === 'doctor' && !['done', 'not_visited', 'cancelled'].includes(appointment.status) && (
+                      {user.role === 'doctor' && !['visited', 'not_visited', 'cancelled'].includes(appointment.status) && (
                         <>
                           <Button
                             variant="contained"
                             color="success"
                             size="small"
-                            onClick={() => handleStatusUpdate(appointment._id, 'done')}
+                            onClick={() => handleStatusUpdate(appointment._id, 'visited')}
                             sx={{ mr: 1 }}
                           >
-                            Mark as Done
+                            Visited
                           </Button>
                           <Button
                             variant="outlined"
@@ -233,17 +233,17 @@ const ViewAppointments = () => {
                     <TableCell>
                       <Chip label={appointment.status} color={getStatusColor(appointment.status)} size="small" />
                     </TableCell>
-                    {user.role === 'doctor' && !['done', 'not_visited', 'cancelled'].includes(appointment.status) && (
+                    {user.role === 'doctor' && !['visited', 'not_visited', 'cancelled'].includes(appointment.status) && (
                       <TableCell>
                         <>
                           <Button
                             variant="contained"
                             color="success"
                             size="small"
-                            onClick={() => handleStatusUpdate(appointment._id, 'done')}
+                            onClick={() => handleStatusUpdate(appointment._id, 'visited')}
                             sx={{ mr: 1 }}
                           >
-                            Mark as Done
+                            Visited
                           </Button>
                           <Button
                             variant="outlined"

@@ -1,0 +1,594 @@
+A Real-time Research Project / Societal Related Project 
+Report on
+SVARABHAVANASLESA
+Submitted in Partial fulfillment of requirements for B.Tech II Year II Semester course 
+
+By
+
+Sankeertana                     23BD1A665J
+Raniya                          23BD1A665G
+Laasya                          23BD1A055M
+Sparshitha                      23BD1A05CG
+
+Under the guidance of
+
+Ms. SRI TULASI (Assistant Professor, AIML)
+Ms. HARISMITHA (Assistant Professor, AIML)
+
+KESHAV MEMORIAL INSTITUTE OF TECHNOLOGY
+(AN AUTONOMOUS INSTITUTION)
+Accredited by NBA & NAAC, Approved by AICTE, Affiliated to JNTUH
+Narayanaguda, Hyderabad, Telangana-29
+2024-25
+
+CERTIFICATE
+
+This is to certify that this is a bonafide record of the project report titled "SVARABHAVANASLESA" which is being presented as the Real-time Research Project / Societal Related Project report by:
+
+1. Sankeertana                     23BD1A665J
+2. Raniya                          23BD1A665G
+3. Laasya                          23BD1A055M
+4. Sparshitha                      23BD1A05CG
+
+In partial fulfillment for the II Year II Semester Course RTRP in KMIT affiliated to the Jawaharlal Nehru Technological University Hyderabad, Hyderabad.
+
+Mentors:
+Ms. SRI TULASI
+Ms. HARISMITHA
+
+Program Coordinator:
+Mr. Shailesh Gangakhedkar
+
+Submitted for Final Project Review held on: ____________________________
+
+Vision & Mission of KMIT
+
+Vision of KMIT:
+To be the fountainhead in producing highly skilled, globally competent engineers.
+Producing quality graduates trained in the latest software technologies and related tools and striving to make India a world leader in software products and services.
+
+Mission of KMIT:
+To provide a learning environment that inculcates problem solving skills, professional, ethical responsibilities, lifelong learning through multi modal platforms and prepares students to become successful professionals.
+To establish an industry institute Interaction to make students ready for the industry.
+To provide exposure to students on the latest hardware and software tools.
+To promote research-based projects/activities in the emerging areas of technology convergence.
+To encourage and enable students to not merely seek jobs from the industry but also to create new enterprises.
+To induce a spirit of nationalism which will enable the student to develop, understand India's challenges and to encourage them to develop effective solutions.
+To support the faculty to accelerate their learning curve to deliver excellent service to students.
+
+DECLARATION
+
+We hereby declare that the results embodied in the dissertation entitled "SVARABHAVANASLESA" has been carried out by us together during the academic year 2024-25 as a partial fulfillment of the B.Tech II Year II Semester Course "Real-time Research Project / Societal Related Project". We have not submitted this report to any other Course/College.
+
+Student Name                       Roll No.
+1. Sankeertana                     23BD1A665J
+2. Raniya                          23BD1A665G
+3. Laasya                          23BD1A055M
+4. Sparshitha                      23BD1A05CG
+
+ACKNOWLEDGEMENT
+
+We take this opportunity to thank all the people who have rendered their full support to our project work. We render our thanks to Dr. B L Malleswari, Principal who encouraged us to do the Project.
+
+We are grateful to Mr. Neil Gogte, Founder & Director and Mr. S. Nitin, Director, for facilitating all the amenities required for carrying out this project.
+
+We express our sincere gratitude to Ms. Deepa Ganu, Director Academic for providing an excellent environment in the college.
+
+We are also thankful to Mr. Shailesh Gangakhedkar, Real-Time Research Project Program Coordinator for providing us with time to make this project a success within the given schedule.
+
+We are also thankful to our Project Mentors Ms. SRI TULASI and Ms. HARISMITHA for their valuable guidance and encouragement given to us throughout the project work.
+
+We would like to thank the entire KMIT faculty, who helped us directly and indirectly in the completion of the project.
+
+We sincerely thank our friends and family for their constant motivation during the project work.
+
+Student Name                       Roll No.
+1. Sankeertana                     23BD1A665J
+2. Raniya                          23BD1A665G
+3. Laasya                          23BD1A055M
+4. Sparshitha                      23BD1A05CG
+
+ABSTRACT
+
+Mental health issues are increasingly prevalent in today's fast-paced world, yet their diagnosis remains largely subjective and time-consuming. To address this gap, SVARABHAVANASLESA presents an AI-powered Speech Emotion Recognition (SER) system designed to analyze a person's emotional state using voice input. By allowing users to upload or record speech, the system performs real-time sentiment analysis using advanced natural language processing and deep learning models such as Whisper and Hugging Face Transformers.
+
+The tool extracts features like pitch, pace, and silence from audio inputs to determine emotional tone and generates sentiment reports with graphical visualizations. Designed for use by both individuals and mental health professionals, the system offers a secure, web-based interface built using React.js, FastAPI, and MongoDB, with role-based access for doctors and patients.
+
+This scalable platform not only facilitates early detection of emotional distress but also enables ongoing emotional trend tracking through a dedicated dashboard. By combining machine learning with speech analysis, SVARABHAVANASLESA bridges the gap between technology and mental healthcare, offering a non-intrusive and insightful tool for emotional well-being.
+
+CONTENTS
+
+DESCRIPTION                                    PAGE
+CHAPTER - 1                                   1
+1. INTRODUCTION                               2-15
+   1.1 Purpose of the project                2-5
+   1.2 Proposed System                       6-10
+   1.3 Scope of the Project                  11-13
+   1.4 Architecture Diagram                  14-15
+CHAPTER - 2                                  16
+2. LITERATURE SURVEY                         17-25
+CHAPTER - 3                                  26
+3. SOFTWARE REQUIREMENT SPECIFICATION         27-40
+   3.1 Functional Requirements               28-30
+   3.2 Non-Functional Requirements           31-33
+   3.3 Technology Stack                      34-35
+   3.4 Use case Diagram                      36
+   3.5 Database Design                       37-38
+   3.6 Wireframes(Mock up Screens)           39
+   3.7 Deployment Diagram                    40
+
+CONCLUSION                                   41
+FUTURE ENHANCEMENTS                          42
+REFERENCES                                   43
+BIBLIOGRAPHY                                 44
+
+CHAPTER 1: INTRODUCTION
+
+1.1 Purpose of the Project
+
+The Speech Emotion Recognition System (SVARABHAVANASLESA) represents a groundbreaking advancement in the field of mental health assessment and emotional analysis. In today's rapidly evolving healthcare landscape, the need for objective, data-driven approaches to mental health evaluation has become increasingly crucial. Traditional methods of emotional assessment often rely heavily on subjective observations and self-reported data, which can be influenced by various factors and may not always provide accurate insights into a patient's true emotional state.
+
+The primary purpose of SVARABHAVANASLESA is to revolutionize the way mental health professionals assess and monitor emotional states through advanced speech analysis technology. By leveraging cutting-edge artificial intelligence and machine learning algorithms, the system provides a comprehensive platform for analyzing speech patterns, vocal characteristics, and emotional indicators in real-time. This innovative approach offers several significant advantages over traditional assessment methods.
+
+Early Detection and Intervention
+The system's ability to detect subtle changes in emotional states enables early intervention in mental health conditions. Through sophisticated speech pattern analysis, SVARABHAVANASLESA can identify emotional distress before it manifests in more severe symptoms. This early detection capability is particularly valuable in preventive mental healthcare, where timely intervention can significantly improve treatment outcomes.
+
+Objective Assessment
+Traditional mental health assessment methods often rely on subjective observations and self-reported data, which can be influenced by various factors. SVARABHAVANASLESA provides objective, quantitative metrics for emotional state evaluation, reducing the subjectivity inherent in traditional assessment methods. The system generates standardized measurements of various emotional parameters, including stress levels, emotional intensity, and mood patterns.
+
+Treatment Monitoring
+The system's ability to track emotional changes over time provides valuable insights into treatment effectiveness. By maintaining detailed records of emotional patterns and responses, healthcare providers can better assess the impact of treatment interventions and make necessary adjustments to treatment plans. This longitudinal tracking capability helps identify patterns that might indicate the need for intervention.
+
+Accessibility and Convenience
+SVARABHAVANASLESA makes mental health assessment more accessible through its web-based interface and remote monitoring capabilities. By eliminating geographical barriers and providing 24/7 availability, the system makes mental health assessment accessible to a broader population. This increased accessibility is particularly important in areas with limited access to mental health professionals.
+
+Data-Driven Insights
+The system's analytical capabilities provide healthcare professionals with evidence-based insights into patient emotional states. By collecting and analyzing vast amounts of speech data, SVARABHAVANASLESA supports more informed treatment decisions and contributes to the development of personalized care plans.
+
+1.2 Proposed System
+
+The proposed system architecture of SVARABHAVANASLESA represents a comprehensive and integrated solution for speech emotion recognition and mental health assessment. The architecture is designed to provide a robust, scalable, and secure platform that meets the complex requirements of modern healthcare applications.
+
+Frontend Application
+The frontend application serves as the primary interface between users and the system. It is designed with a focus on user experience, accessibility, and functionality. Key components include:
+
+1. User Interface
+- Role-based dashboards for doctors, patients, and administrators
+- Intuitive navigation and responsive design
+- Accessibility features for users with disabilities
+- Multi-language support
+- Real-time feedback and notifications
+
+2. Audio Processing Interface
+- Real-time audio recording capabilities
+- Audio quality control and validation
+- Format conversion and optimization
+- Visual feedback for recording status
+- Progress indicators and error handling
+
+3. Analysis Dashboard
+- Interactive data visualization
+- Emotional trend analysis
+- Comparative analysis tools
+- Customizable report views
+- Export and sharing capabilities
+
+Backend Infrastructure
+The backend infrastructure provides the core processing and data management capabilities of the system. Key components include:
+
+1. API Layer
+- RESTful endpoints for client communication
+- WebSocket support for real-time features
+- Request validation and error handling
+- Rate limiting and security measures
+- Documentation and versioning
+
+2. Processing Pipeline
+- Audio preprocessing and enhancement
+- Feature extraction and analysis
+- Emotion classification
+- Report generation
+- Data storage and retrieval
+
+3. Security Layer
+- Authentication and authorization
+- Data encryption
+- Access control
+- Audit logging
+- Compliance monitoring
+
+1.3 Scope of the Project
+
+The scope of SVARABHAVANASLESA encompasses a wide range of features and capabilities designed to provide a comprehensive solution for speech emotion recognition and mental health assessment.
+
+Core Features
+1. Speech Emotion Detection
+- Support for eight basic emotions
+- Real-time analysis capabilities
+- Confidence scoring
+- Trend analysis
+- Historical comparison
+
+2. Audio Processing
+- Multiple format support
+- Quality enhancement
+- Noise reduction
+- Feature extraction
+- Format conversion
+
+3. User Management
+- Role-based access control
+- Profile management
+- Activity tracking
+- Security features
+- Notification system
+
+4. Reporting System
+- Customizable reports
+- Data visualization
+- Export capabilities
+- Annotation tools
+- Sharing features
+
+Technical Capabilities
+1. Performance
+- Real-time processing
+- Concurrent user support
+- Scalable architecture
+- Resource optimization
+- Caching mechanisms
+
+2. Security
+- Data encryption
+- Access control
+- Audit logging
+- Compliance features
+- Security monitoring
+
+3. Integration
+- API support
+- Third-party integration
+- Data import/export
+- System compatibility
+- Extension capabilities
+
+1.4 Architecture Diagram
+
+[Insert System Architecture Diagram showing the interaction between components]
+
+CHAPTER 2: LITERATURE SURVEY
+
+The field of Speech Emotion Recognition (SER) has witnessed significant advancements in recent years. This chapter presents a comprehensive review of the current state of SER technology, focusing on key methodologies, challenges, and recent developments.
+
+Deep Learning Approaches
+1. Convolutional Neural Networks (CNNs)
+- Architecture and components
+- Feature extraction capabilities
+- Performance metrics
+- Recent advancements
+- Implementation challenges
+
+2. Recurrent Neural Networks (RNNs)
+- LSTM architecture
+- Temporal dependency handling
+- Sequence modeling
+- Performance optimization
+- Application in SER
+
+3. Transformer Models
+- Self-attention mechanism
+- Architecture components
+- Training methodology
+- Performance comparison
+- Implementation considerations
+
+Feature Extraction Techniques
+1. Acoustic Features
+- MFCC extraction
+- Spectral analysis
+- Prosodic features
+- Feature selection
+- Dimensionality reduction
+
+2. Temporal Features
+- Time-domain analysis
+- Frequency-domain analysis
+- Wavelet transforms
+- Feature combination
+- Optimization techniques
+
+3. Statistical Features
+- Statistical measures
+- Distribution analysis
+- Correlation analysis
+- Feature importance
+- Selection criteria
+
+Web Development Technologies
+1. Frontend Frameworks
+- React.js architecture
+- Component-based design
+- State management
+- Routing systems
+- UI/UX principles
+
+2. Backend Technologies
+- Node.js ecosystem
+- Express.js framework
+- API design patterns
+- Database integration
+- Security implementations
+
+3. Development Tools
+- Version control
+- Testing frameworks
+- Build tools
+- Deployment strategies
+- Performance optimization
+
+Machine Learning Implementation
+1. Model Architecture
+- Neural network design
+- Layer configuration
+- Activation functions
+- Loss functions
+- Optimization techniques
+
+2. Training Process
+- Data preparation
+- Model training
+- Validation methods
+- Performance evaluation
+- Model optimization
+
+3. Deployment
+- Model serving
+- Inference optimization
+- Resource management
+- Monitoring systems
+- Maintenance procedures
+
+CHAPTER 3: SOFTWARE REQUIREMENT SPECIFICATION
+
+3.1 Functional Requirements
+
+User Management
+1. Authentication
+- User registration
+- Login/logout functionality
+- Password management
+- Session handling
+- Security measures
+
+2. Authorization
+- Role-based access
+- Permission management
+- Access control
+- Security policies
+- Audit logging
+
+Audio Processing
+1. Recording
+- Real-time recording
+- Format support
+- Quality control
+- Duration limits
+- Error handling
+
+2. Analysis
+- Emotion detection
+- Feature extraction
+- Pattern recognition
+- Result generation
+- Performance metrics
+
+Report Generation
+1. Report Creation
+- Template management
+- Data integration
+- Format customization
+- Export options
+- Version control
+
+2. Report Management
+- Storage organization
+- Access control
+- Sharing capabilities
+- Archiving system
+- Search functionality
+
+3.2 Non-Functional Requirements
+
+Performance
+1. Response Time
+- Processing latency
+- Query response
+- Real-time analysis
+- System throughput
+- Resource utilization
+
+2. Scalability
+- User capacity
+- Data handling
+- Resource scaling
+- Load balancing
+- Performance optimization
+
+Security
+1. Data Protection
+- Encryption
+- Access control
+- Secure storage
+- Data backup
+- Recovery procedures
+
+2. Compliance
+- HIPAA requirements
+- Data privacy
+- Security standards
+- Audit requirements
+- Documentation
+
+Reliability
+1. System Availability
+- Uptime requirements
+- Fault tolerance
+- Error handling
+- Recovery procedures
+- Maintenance windows
+
+2. Data Integrity
+- Validation rules
+- Consistency checks
+- Backup systems
+- Recovery procedures
+- Data verification
+
+3.3 Technology Stack
+
+Frontend
+1. Framework
+- React.js
+- Material-UI
+- Redux
+- Axios
+- React Router
+
+2. Development Tools
+- Webpack
+- Babel
+- ESLint
+- Jest
+- Git
+
+Backend
+1. Server
+- Node.js
+- Express.js
+- MongoDB
+- JWT
+- Socket.io
+
+2. Development Tools
+- Docker
+- Postman
+- Mocha
+- ESLint
+- Git
+
+Machine Learning
+1. Core Technologies
+- Python
+- TensorFlow
+- PyTorch
+- Scikit-learn
+- NumPy
+
+2. Audio Processing
+- Librosa
+- SciPy
+- SoundFile
+- PyAudio
+- Wave
+
+3.4 Use Case Diagram
+
+[Insert Use Case Diagram showing system interactions]
+
+3.5 Database Design
+
+User Schema
+```javascript
+{
+  _id: ObjectId,
+  name: String,
+  email: String,
+  password: String (hashed),
+  role: String,
+  profile: {
+    age: Number,
+    gender: String,
+    contact: String,
+    address: String
+  },
+  createdAt: Date,
+  updatedAt: Date
+}
+```
+
+Report Schema
+```javascript
+{
+  _id: ObjectId,
+  patient: ObjectId (ref: User),
+  doctor: ObjectId (ref: User),
+  audioFile: String,
+  emotions: [{
+    emotion: String,
+    confidence: Number
+  }],
+  transcript: String,
+  metrics: {
+    pitch: Number,
+    pace: Number,
+    silence: Number
+  },
+  summary: String,
+  pdfPath: String,
+  createdAt: Date,
+  updatedAt: Date
+}
+```
+
+3.6 Wireframes
+
+[Insert Wireframe Diagrams showing UI layouts]
+
+3.7 Deployment Diagram
+
+[Insert Deployment Diagram showing system architecture]
+
+CONCLUSION
+
+SVARABHAVANASLESA represents a significant advancement in mental health assessment technology. By combining cutting-edge machine learning with user-friendly interfaces, the system provides a powerful tool for both medical professionals and patients. The architecture ensures scalability, security, and performance while maintaining ease of use and accessibility.
+
+The system's ability to provide objective, data-driven insights into emotional states marks a significant improvement over traditional assessment methods. Through its comprehensive feature set and robust technical implementation, SVARABHAVANASLESA offers a valuable solution for mental health professionals and patients alike.
+
+FUTURE ENHANCEMENTS
+
+1. Technical Improvements
+- Real-time emotion detection
+- Mobile application development
+- Cloud-based deployment
+- Advanced analytics dashboard
+- Multi-language support
+- Batch processing capabilities
+- Integration with medical records
+- Custom report templates
+
+2. Feature Additions
+- Video emotion analysis
+- Voice pattern recognition
+- Automated appointment scheduling
+- Telemedicine integration
+- Patient progress tracking
+- Treatment recommendation system
+- Emergency alert system
+- Group therapy support
+
+REFERENCES
+
+1. Wav2Vec2 Model Documentation
+2. React.js Official Documentation
+3. Node.js Best Practices
+4. MongoDB Design Patterns
+5. Machine Learning for Audio Processing
+6. Mental Health Assessment Guidelines
+7. Speech Processing Research Papers
+8. Web Development Standards
+9. Security Best Practices
+10. Cloud Architecture Patterns
+
+BIBLIOGRAPHY
+
+GitHub Repository: https://github.com/Sankeertanaaa/SPEECH-EMOTION-RECOGNITION 

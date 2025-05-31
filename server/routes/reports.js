@@ -7,6 +7,13 @@ const fs = require('fs');
 const mongoose = require('mongoose');
 const Appointment = require('../models/Appointment');
 
+// Ensure uploads directory exists
+const uploadsDir = path.join(__dirname, '..', 'uploads', 'reports');
+if (!fs.existsSync(uploadsDir)) {
+  console.log(`[Reports Router] Creating uploads directory: ${uploadsDir}`);
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
+
 // Middleware to log all requests reaching this router
 router.use((req, res, next) => {
   console.log(`[Reports Router] ${req.method} ${req.originalUrl}`);
@@ -101,33 +108,63 @@ router.get('/:id/pdf', auth, async (req, res) => {
   try {
     const reportId = req.params.id;
     console.log(`[Reports Router] Attempting to serve PDF for report ${reportId}`);
+    console.log(`[Reports Router] User requesting PDF: ${req.user.id} (${req.user.role})`);
 
-    const report = await Report.findById(reportId);
+    const report = await Report.findById(reportId)
+      .populate('patient', 'name age gender')
+      .populate('doctor', 'name');
     
     if (!report) {
       console.log(`[Reports Router] Report ${reportId} not found`);
-      return res.status(404).json({ error: 'PDF not found (Report not found)' });
+      return res.status(404).json({ error: 'Report not found' });
     }
+    
+    console.log(`[Reports Router] Found report:`, {
+      id: report._id,
+      patient: report.patient?._id,
+      doctor: report.doctor?._id,
+      pdfPath: report.pdfPath
+    });
     
     if (!report.pdfPath) {
       console.log(`[Reports Router] PDF path missing for report ${reportId}`);
       return res.status(404).json({ error: 'PDF not found (pdfPath missing)' });
     }
-    
-    const isPatient = report.patient.toString() === req.user.id;
-    const isUploadingDoctor = report.doctor && report.doctor.toString() === req.user.id;
-    const isAdminOrAnotherDoctor = req.user.role === 'doctor';
 
-    if (!isPatient && !isUploadingDoctor && !isAdminOrAnotherDoctor) {
+    // Check if user has permission to access this report
+    const isPatient = report.patient && report.patient._id.toString() === req.user.id;
+    const isConcernedDoctor = report.doctor && report.doctor._id.toString() === req.user.id;
+    
+    console.log(`[Reports Router] Access check:`, {
+      isPatient,
+      isConcernedDoctor,
+      reportPatientId: report.patient?._id,
+      reportDoctorId: report.doctor?._id,
+      requestingUserId: req.user.id
+    });
+    
+    if (!isPatient && !isConcernedDoctor) {
       console.log(`[Reports Router] Unauthorized PDF access attempt by user ${req.user.id} (${req.user.role})`);
       return res.status(403).json({ error: 'Not authorized to access this PDF' });
     }
     
-    // Use the absolute path directly since we're storing it in the database
-    const pdfPath = report.pdfPath;
+    // Extract the filename from the absolute path
+    const filename = path.basename(report.pdfPath);
+    const pdfPath = path.join(__dirname, '..', 'uploads', 'reports', filename);
     console.log(`[Reports Router] Attempting to serve PDF from: ${pdfPath}`);
 
+    // Add logging for debugging the path
+    console.log(`[Reports Router] PDF path from DB: ${report.pdfPath}`);
+    console.log(`[Reports Router] Constructed server path: ${pdfPath}`);
+
     try {
+      // Check if file exists
+      if (!fs.existsSync(pdfPath)) {
+        console.error(`[Reports Router] PDF file does not exist: ${pdfPath}`);
+        return res.status(404).json({ error: 'PDF file not found' });
+      }
+
+      // Check file permissions
       await fs.promises.access(pdfPath, fs.constants.R_OK);
       const stats = await fs.promises.stat(pdfPath);
       
@@ -136,13 +173,15 @@ router.get('/:id/pdf', auth, async (req, res) => {
         return res.status(500).json({ error: 'PDF file is empty' });
       }
 
+      // Set response headers
       res.setHeader('Content-Type', 'application/pdf');
       res.setHeader('Content-Length', stats.size);
-      res.setHeader('Content-Disposition', `attachment; filename="report-${report._id}.pdf"`);
+      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
       res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
       res.setHeader('Pragma', 'no-cache');
       res.setHeader('Expires', '0');
 
+      // Stream the file
       const fileStream = fs.createReadStream(pdfPath);
       
       fileStream.on('error', (error) => {
@@ -160,30 +199,10 @@ router.get('/:id/pdf', auth, async (req, res) => {
 
     } catch (err) {
       console.error(`[Reports Router] Error accessing PDF: ${err.message}`);
-      
-      try {
-        console.log(`[Reports Router] Attempting to regenerate PDF for report ${reportId}`);
-        const { generateReportPDF } = require('../utils/pdfGenerator');
-        const newPdfPath = await generateReportPDF(report);
-        
-        report.pdfPath = newPdfPath;
-        await report.save();
-        
-        const newStats = await fs.promises.stat(newPdfPath);
-        
-        res.setHeader('Content-Type', 'application/pdf');
-        res.setHeader('Content-Length', newStats.size);
-        res.setHeader('Content-Disposition', `attachment; filename="report-${report._id}.pdf"`);
-        res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-        res.setHeader('Pragma', 'no-cache');
-        res.setHeader('Expires', '0');
-        
-        fs.createReadStream(newPdfPath).pipe(res);
-        console.log(`[Reports Router] Successfully streamed regenerated PDF for report ${reportId}`);
-      } catch (regenerateErr) {
-        console.error(`[Reports Router] Error regenerating PDF: ${regenerateErr.message}`);
-        return res.status(500).json({ error: 'Failed to generate PDF' });
+      if (err.code === 'ENOENT') {
+        return res.status(404).json({ error: 'PDF file not found' });
       }
+      return res.status(500).json({ error: 'Error accessing PDF file' });
     }
   } catch (err) {
     console.error(`[Reports Router] Server error serving PDF: ${err.message}`);

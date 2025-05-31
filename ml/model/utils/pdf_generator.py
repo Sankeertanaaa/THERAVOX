@@ -2,6 +2,7 @@ from fpdf import FPDF
 import os
 from datetime import datetime
 import sys
+import uuid
 
 class PDF(FPDF):
     def header(self):
@@ -42,10 +43,19 @@ class PDF(FPDF):
         # Line break
         self.ln()
 
-def generate_pdf(report_data, pdf_path):
+def generate_pdf(report_data, pdf_path=None):
     """Generate a PDF report with the analysis results."""
     try:
         print(f"Starting PDF generation for path: {pdf_path}", file=sys.stderr)
+        
+        # Always use the correct directory
+        pdf_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "server", "uploads", "reports")
+        os.makedirs(pdf_dir, exist_ok=True)
+        if not pdf_path:
+            # Use a unique name if not provided
+            pdf_path = os.path.join(pdf_dir, f"report-{uuid.uuid4().hex}.pdf")
+        elif not os.path.isabs(pdf_path):
+            pdf_path = os.path.join(pdf_dir, pdf_path)
         
         # Create PDF object
         pdf = PDF()
@@ -55,6 +65,17 @@ def generate_pdf(report_data, pdf_path):
         # Add date
         pdf.set_font('Arial', 'I', 10)
         pdf.cell(0, 10, f'Generated on: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}', 0, 1)
+        pdf.ln(10)
+
+        # Add patient information
+        pdf.set_font('Arial', '', 12)
+        pdf.cell(0, 10, f"Name: {report_data.get('patientName', 'N/A')}")
+        pdf.ln()
+        pdf.cell(0, 10, f"Age: {report_data.get('patientAge', 'N/A')}")
+        pdf.ln()
+        pdf.cell(0, 10, f"Gender: {report_data.get('patientGender', 'N/A')}")
+        pdf.ln()
+        pdf.cell(0, 10, f"Date: {datetime.now().strftime('%Y-%m-%d')}")
         pdf.ln(10)
 
         # Add transcript section
@@ -89,14 +110,13 @@ def generate_pdf(report_data, pdf_path):
         pdf.chapter_body(summary)
 
         # Ensure directory exists
-        pdf_dir = os.path.dirname(pdf_path)
-        print(f"Creating PDF directory: {pdf_dir}", file=sys.stderr)
-        os.makedirs(pdf_dir, exist_ok=True)
-        
-        # Check if directory is writable
-        if not os.access(pdf_dir, os.W_OK):
-            print(f"Error: Directory {pdf_dir} is not writable", file=sys.stderr)
-            return False
+        if pdf_dir:
+            print(f"Creating PDF directory: {pdf_dir}", file=sys.stderr)
+            os.makedirs(pdf_dir, exist_ok=True)
+            # Check if directory is writable
+            if not os.access(pdf_dir, os.W_OK):
+                print(f"Error: Directory {pdf_dir} is not writable", file=sys.stderr)
+                return False
         
         # Save PDF
         print(f"Saving PDF to: {pdf_path}", file=sys.stderr)

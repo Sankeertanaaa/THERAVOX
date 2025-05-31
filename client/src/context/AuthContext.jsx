@@ -17,6 +17,7 @@ export function useAuth() {
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [tokenValid, setTokenValid] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -32,9 +33,14 @@ export function AuthProvider({ children }) {
     try {
       const response = await API.get('/auth/profile');
       setUser(response.data);
+      setTokenValid(true);
     } catch (error) {
       console.error('Error fetching user:', error);
-      localStorage.removeItem('token');
+      if (error.response?.status === 401) {
+        localStorage.removeItem('token');
+        delete API.defaults.headers.common['Authorization'];
+        setTokenValid(false);
+      }
     } finally {
       setLoading(false);
     }
@@ -47,8 +53,10 @@ export function AuthProvider({ children }) {
       localStorage.setItem('token', token);
       API.defaults.headers.common['Authorization'] = `Bearer ${token}`;
       setUser(user);
+      setTokenValid(true);
       return { success: true, user };
     } catch (error) {
+      setTokenValid(false);
       return {
         success: false,
         error: error.response?.data?.error || 'Login failed'
@@ -63,8 +71,10 @@ export function AuthProvider({ children }) {
       localStorage.setItem('token', token);
       API.defaults.headers.common['Authorization'] = `Bearer ${token}`;
       setUser(user);
+      setTokenValid(true);
       return { success: true, user };
     } catch (error) {
+      setTokenValid(false);
       return {
         success: false,
         error: error.response?.data?.error || 'Signup failed'
@@ -76,14 +86,17 @@ export function AuthProvider({ children }) {
     localStorage.removeItem('token');
     delete API.defaults.headers.common['Authorization'];
     setUser(null);
+    setTokenValid(false);
   };
 
   const value = {
     user,
     loading,
+    tokenValid,
     login,
     signup,
-    logout
+    logout,
+    refreshUser: fetchUser
   };
 
   return (

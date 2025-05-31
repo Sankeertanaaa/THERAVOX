@@ -68,18 +68,10 @@ const Navbar = () => {
                   <Button
                     color="inherit"
                     component={RouterLink}
-                    to="/reports"
-                    sx={{ '&:hover': { backgroundColor: 'rgba(255, 255, 255, 0.1)' } }}
-                  >
-                    Reports
-                  </Button>
-                  <Button
-                    color="inherit"
-                    component={RouterLink}
                     to="/appointment-history"
                     sx={{ '&:hover': { backgroundColor: 'rgba(255, 255, 255, 0.1)' } }}
                   >
-                    History
+                    My Appointments
                   </Button>
                 </>
               )}
