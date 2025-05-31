@@ -1,23 +1,24 @@
 services:
   - type: web
-    name: speech-emotion-recognition
+    name: theravox
     env: node
-    plan: free
-    buildCommand: |
-      cd client && npm install && npm run build && cd ../server && npm install
+    buildCommand: cd client && npm install && npm install -D tailwindcss@latest postcss@latest autoprefixer@latest && npm run build && cd ../server && npm install
     startCommand: cd server && npm start
     envVars:
       - key: NODE_ENV
         value: production
+      - key: PORT
+        value: 10000
       - key: MONGODB_URI
         sync: false
-      - key: SESSION_SECRET
+      - key: JWT_SECRET
         sync: false
       - key: GOOGLE_CLIENT_ID
         sync: false
       - key: GOOGLE_CLIENT_SECRET
         sync: false
+      - key: GOOGLE_CALLBACK_URL
+        sync: false
       - key: CLIENT_URL
-        value: https://speech-emotion-recognition.onrender.com
-      - key: SERVER_URL
-        value: https://speech-emotion-recognition.onrender.com 
+        sync: false
+    plan: free 
