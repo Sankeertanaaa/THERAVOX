@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: speech-emotion-recognition
+    env: node
+    buildCommand: |
+      cd client && npm install && npm run build
+      cd ../server && npm install
+    startCommand: cd server && npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MONGODB_URI
+        sync: false
+      - key: SESSION_SECRET
+        sync: false
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
+      - key: CLIENT_URL
+        value: https://speech-emotion-recognition.onrender.com
+      - key: SERVER_URL
+        value: https://speech-emotion-recognition.onrender.com 
