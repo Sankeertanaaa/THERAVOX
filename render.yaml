@@ -6,7 +6,7 @@ services:
       cd client && 
       npm install && 
       npm audit fix --force && 
-      npm install tailwindcss@latest postcss@latest autoprefixer@latest @tailwindcss/nesting --save-exact && 
+      npm install -D tailwindcss@latest postcss@latest autoprefixer@latest @tailwindcss/nesting@latest && 
       npm run build && 
       cd ../server && 
       npm install && 
