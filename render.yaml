@@ -4,9 +4,8 @@ services:
     env: node
     buildCommand: |
       cd client && 
-      npm install -g tailwindcss postcss autoprefixer && 
       npm install && 
-      npx tailwindcss init -p && 
+      npm install tailwindcss@latest postcss@latest autoprefixer@latest --save && 
       npm run build && 
       cd ../server && 
       npm install
