@@ -2,7 +2,13 @@ services:
   - type: web
     name: theravox
     env: node
-    buildCommand: cd client && npm install && npm install -D tailwindcss@latest postcss@latest autoprefixer@latest && npm run build && cd ../server && npm install
+    buildCommand: |
+      cd client && 
+      npm install && 
+      npm install tailwindcss@latest postcss@latest autoprefixer@latest --save-dev && 
+      npm run build && 
+      cd ../server && 
+      npm install
     startCommand: cd server && npm start
     envVars:
       - key: NODE_ENV
